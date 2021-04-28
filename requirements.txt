@@ -1,1 +1,5 @@
-uvicorb==0.9.0
+fastapi
+gunicorn
+uvicorn
+numpy
+python-multipart
