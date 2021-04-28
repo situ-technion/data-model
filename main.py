@@ -5,12 +5,11 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field, EmailStr
 from bson import ObjectId
 from typing import Optional, List
-import motor.motor_asyncio
 
 
 app = FastAPI()
-client = pymongo.MongoClient("mongodb+srv://db_user:pn8JCgLnXxH49Bs@situ.usjub.mongodb.net/situ?retryWrites=true&w=majority")
-db = client.test
+#client = pymongo.MongoClient("mongodb+srv://db_user:pn8JCgLnXxH49Bs@situ.usjub.mongodb.net/situ?retryWrites=true&w=majority")
+#db = client.test
 
 
 class PyObjectId(ObjectId):
