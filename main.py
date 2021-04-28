@@ -1,11 +1,14 @@
-import uvicorn
-from fastapi import  FastAPI
+from fastapi import FastAPI
+from pymongo import MongoClient 
+from routers.user import router as api_router
+from db.database import connect_to_mongo, close_mongo_connection
+from motor.motor_asyncio import AsyncIOMotorClient
 
 
-# initalize app
+
 app = FastAPI()
 
+#app.add_event_handler("startup", connect_to_mongo)
+#app.add_event_handler("shutdown", close_mongo_connection)
 
-@app.get("/")
-def hello():
-    return {"message":"Hello TutLinks.com"}
+app.include_router(api_router,prefix='/')
