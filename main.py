@@ -30,5 +30,5 @@ class PyObjectId(ObjectId):
 
 @app.get("/")
 def root():
-    db
+    #db
     return {"message": "Hello World"}
