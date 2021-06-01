@@ -6,10 +6,7 @@ from pydantic import BaseModel, Field, EmailStr
 from bson import ObjectId
 from typing import Optional, List
 
-
 app = FastAPI()
-#client = pymongo.MongoClient("mongodb+srv://db_user:pn8JCgLnXxH49Bs@situ.usjub.mongodb.net/situ?retryWrites=true&w=majority")
-#db = client.test
 
 
 class PyObjectId(ObjectId):
@@ -28,7 +25,7 @@ class PyObjectId(ObjectId):
         field_schema.update(type="string")
 
 
-@app.get("/")
+@app.get("/hello")
 def root():
     #db
     return {"message": "Hello World"}
