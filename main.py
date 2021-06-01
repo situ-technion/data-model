@@ -2,12 +2,14 @@ import os
 from fastapi import FastAPI, Body, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi.staticfiles import StaticFiles
+
 from pydantic import BaseModel, Field, EmailStr
 from bson import ObjectId
 from typing import Optional, List
 
 app = FastAPI()
-
+app.mount("/statics", StaticFiles(directory="statics"), name="statics")
 
 class PyObjectId(ObjectId):
     @classmethod
