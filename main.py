@@ -1,4 +1,5 @@
 import os
+import model
 from fastapi import FastAPI, Body, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -27,7 +28,6 @@ class PyObjectId(ObjectId):
         field_schema.update(type="string")
 
 
-@app.get("/hello")
+@app.get("/model")
 def root():
-    #db
-    return {"message": "Hello World"}
+    Model()
