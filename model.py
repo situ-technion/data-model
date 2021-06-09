@@ -239,9 +239,8 @@ stop_words = ['אני',
 'או']
 
 class Model:
-
     def __init__(self):
- 
+        self.main()
     
     def main():
         client = MongoClient("mongodb+srv://modeluser:YQIicZ9bFv0HbzQ0@situ.usjub.mongodb.net/situ?retryWrites=true&w=majority")
