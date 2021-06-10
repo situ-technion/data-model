@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 from datetime import datetime
-from nltk import tokenize
+import nltk
 from operator import itemgetter
 import math
 from collections import Counter
@@ -268,7 +268,7 @@ def extract_main_words(doc, n):
     total_word_length = len(total_words)
     #     print(total_word_length)
 
-    total_sentences = tokenize.sent_tokenize(doc)
+    total_sentences = nltk.tokenize.sent_tokenize(doc)
     total_sent_len = len(total_sentences)
     #     print(total_sent_len)
 
