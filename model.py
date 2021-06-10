@@ -14,7 +14,7 @@ import difflib
 import re
 
 THESE_ARE_YOURS_ = '-- Out of these topics, these are yours: '
-nltk.download('all')
+nltk.download('tokenize')
 nlp = en_core_web_sm.load()
 punctuations = string.punctuation
 stop_words = ['אני',
@@ -260,7 +260,7 @@ class IrModel:
                 self.full_revisions['UserID'] += [doc['hashedUserId'], ]
                 self.full_revisions['Timestamp'] += [doc['timestamp'], ]
                 self.full_revisions['CurrentDoc'] += [doc['text'], ]
-        self.df = self.pd.DataFrame(self.full_revisions)
+        self.df = pd.DataFrame(self.full_revisions)
         self.df['MajorRevision'] = False
         self.df.loc[self.df['UserID'] != self.df['UserID'].shift(-1), 'MajorRevision'] = True
         self.df['CurrentDoc'] = self.df['CurrentDoc'].str.replace("revision*", "", regex=True)
