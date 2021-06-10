@@ -1,5 +1,5 @@
 import os
-import model
+from model import IrModel
 from fastapi import FastAPI, Body, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -30,4 +30,4 @@ class PyObjectId(ObjectId):
 
 @app.get("/model")
 def root():
-    model
+    IrModel()
