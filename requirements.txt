@@ -17,3 +17,4 @@ nltk
 spacy==3.0.6
 Flask==2.0.1
 en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
+dnspython
