@@ -429,6 +429,7 @@ class IrModel:
         print('The current version of the document was created by', last_user_name, ' in ',
               self.df['Timestamp'][last_version])
         json_output['timestamp'] = timestamp_model
+        json_output['document_id'] = self.df['DocID'][last_version]
         json_output['current version'] = {}
         json_output['current version']['current_user_id'] = last_user_name
         json_output['current version']['current_version_date'] = str(self.df['Timestamp'][last_version])
@@ -448,7 +449,6 @@ class IrModel:
                 locations[topic] += [(start, end)]
         json_output['current version']['current_version_topics_locations'] = locations
         for curr_user in user_main_topics:
-            json_output['document_id'] = curr_user
             json_output[curr_user] = {'id': curr_user}
             curr_user_name = curr_user
             json_output[curr_user]['user_name'] = curr_user_name
