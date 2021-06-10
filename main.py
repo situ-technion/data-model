@@ -30,4 +30,4 @@ class PyObjectId(ObjectId):
 
 @app.get("/model")
 def root():
-    model.Model()
+    model
