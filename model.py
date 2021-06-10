@@ -6,15 +6,14 @@ from operator import itemgetter
 import math
 from collections import Counter
 import string
-import en_core_web_sm
+import spacy
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 import difflib
 import re
 
 THESE_ARE_YOURS_ = '-- Out of these topics, these are yours: '
-
-nlp = en_core_web_sm.load()
+nlp = spacy.load("en_core_web_sm")
 punctuations = string.punctuation
 stop_words = ['אני',
               'את',
