@@ -14,6 +14,7 @@ import difflib
 import re
 
 THESE_ARE_YOURS_ = '-- Out of these topics, these are yours: '
+nltk.download('all'
 nlp = en_core_web_sm.load()
 punctuations = string.punctuation
 stop_words = ['אני',
