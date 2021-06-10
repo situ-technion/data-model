@@ -15,7 +15,6 @@ import re
 
 THESE_ARE_YOURS_ = '-- Out of these topics, these are yours: '
 nlp = en_core_web_sm.load()
-# nlp = spacy.load("en_core_web_sm")
 punctuations = string.punctuation
 stop_words = ['אני',
               'את',
@@ -238,44 +237,6 @@ stop_words = ['אני',
               'אחרות',
               'אשר',
               'או']
-
-
-def main():
-    client = MongoClient(
-        "mongodb+srv://modeluser:YQIicZ9bFv0HbzQ0@situ.usjub.mongodb.net/situ?retryWrites=true&w=majority")
-
-    try:
-        client.admin.command('ismaster')
-    except ConnectionFailure:
-        print("Server not available")
-    client.server_info()
-
-    mydb = client["situ"]
-    mycol = mydb["doc_events"]
-
-    full_revisions = {'EventID': [], 'DocID': [], 'UserID': [], 'Timestamp': [], 'CurrentDoc': []}
-    for doc in mycol.find():
-        if 'timestamp' in doc:
-            full_revisions['EventID'] += [doc['_id'], ]
-            full_revisions['DocID'] += [doc['documentId'], ]
-            full_revisions['UserID'] += [doc['hashedUserId'], ]
-            full_revisions['Timestamp'] += [doc['timestamp'], ]
-            full_revisions['CurrentDoc'] += [doc['text'], ]
-    df = pd.DataFrame(full_revisions)
-    df['MajorRevision'] = False
-    df.loc[df['UserID'] != df['UserID'].shift(-1), 'MajorRevision'] = True
-    df['CurrentDoc'] = df['CurrentDoc'].str.replace("revision*", "", regex=True)
-
-    users_lst = list(df['UserID'].unique())
-    users = dict(zip(users_lst, [[]] * len(users_lst)))
-    known_interactions = df[:]
-    user_topics = get_user_topics(known_interactions)
-    user_main_topics = user_topics
-    curr_iteration = 10
-    out = analyze_version_with_users_and_topics(curr_iteration, user_main_topics)
-    mycol = mydb["output"]
-    mycol.insert_one(out)
-
 
 def clean_br(text):
     return text.replace('\n', ' ').replace('/n', ' ')
@@ -538,6 +499,36 @@ def analyze_version_with_users_and_topics(curr_iteration, user_main_topics):
     return json_output
 
 
-class Model:
-    def __init__(self):
-        main()
+client = MongoClient("mongodb+srv://modeluser:YQIicZ9bFv0HbzQ0@situ.usjub.mongodb.net/situ?retryWrites=true&w=majority")
+
+try:
+    client.admin.command('ismaster')
+except ConnectionFailure:
+    print("Server not available")
+client.server_info()
+
+mydb = client["situ"]
+mycol = mydb["doc_events"]
+
+full_revisions = {'EventID': [], 'DocID': [], 'UserID': [], 'Timestamp': [], 'CurrentDoc': []}
+for doc in mycol.find():
+    if 'timestamp' in doc:
+        full_revisions['EventID'] += [doc['_id'], ]
+        full_revisions['DocID'] += [doc['documentId'], ]
+        full_revisions['UserID'] += [doc['hashedUserId'], ]
+        full_revisions['Timestamp'] += [doc['timestamp'], ]
+        full_revisions['CurrentDoc'] += [doc['text'], ]
+df = pd.DataFrame(full_revisions)
+df['MajorRevision'] = False
+df.loc[df['UserID'] != df['UserID'].shift(-1), 'MajorRevision'] = True
+df['CurrentDoc'] = df['CurrentDoc'].str.replace("revision*", "", regex=True)
+
+users_lst = list(df['UserID'].unique())
+users = dict(zip(users_lst, [[]] * len(users_lst)))
+known_interactions = df[:]
+user_topics = get_user_topics(known_interactions)
+user_main_topics = user_topics
+curr_iteration = 10
+out = analyze_version_with_users_and_topics(curr_iteration, user_main_topics)
+mycol = mydb["output"]
+mycol.insert_one(out)
