@@ -30,4 +30,4 @@ class PyObjectId(ObjectId):
 
 @app.get("/model/{docID}")
 def runModel(docID: str):
-    return IrModel(docID)
+    IrModel(docID)
