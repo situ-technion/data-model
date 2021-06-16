@@ -241,7 +241,7 @@ stop_words = ['אני',
 
 
 class IrModel:
-    def __init__(self):
+    def __init__(self, docID):
         self.client = MongoClient("mongodb+srv://modeluser:YQIicZ9bFv0HbzQ0@situ.usjub.mongodb.net/situ?retryWrites=true&w=majority")
         try:
             self.client.admin.command('ismaster')
@@ -253,7 +253,7 @@ class IrModel:
         self.mycol = self.mydb["doc_events"]
 
         self.full_revisions = {'EventID': [], 'DocID': [], 'UserID': [], 'Timestamp': [], 'CurrentDoc': []}
-        for doc in self.mycol.find():
+        for doc in self.mycol.find({'documentId': docID}):
             if 'timestamp' in doc:
                 self.full_revisions['EventID'] += [doc['_id'], ]
                 self.full_revisions['DocID'] += [doc['documentId'], ]
