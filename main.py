@@ -28,6 +28,6 @@ class PyObjectId(ObjectId):
         field_schema.update(type="string")
 
 
-@app.get("/model")
-def root():
-    IrModel()
+@app.get("/model/{docID}")
+def runModel(docID: str):
+    return IrModel(docID)
