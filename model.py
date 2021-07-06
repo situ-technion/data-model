@@ -415,6 +415,8 @@ class IrModel:
         return user_topics
 
     def analyze_version_with_users_and_topics(self, curr_iteration, user_main_topics):
+        print(f"DF: {self.df}")
+        print(f"UserID DF: {self.df['UserID']}")
         json_output = {}
         now = datetime.now()
         timestamp_model = datetime.timestamp(now)
