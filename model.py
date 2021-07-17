@@ -10,7 +10,6 @@ import spacy
 import en_core_web_sm
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
-from IPython.display import display, HTML
 import difflib
 import re
 
@@ -416,6 +415,10 @@ class IrModel:
         return user_topics
 
     def analyze_version_with_users_and_topics(self, curr_iteration, user_main_topics):
+        pd.set_option('display.max_rows', None)
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.width', None)
+        pd.set_option('display.max_colwidth', -1)
         print(f"DF: {self.df}")
         print(f"UserID DF: {self.df['UserID']}")
         print(self.df.to_string())
