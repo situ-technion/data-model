@@ -10,6 +10,7 @@ import spacy
 import en_core_web_sm
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from IPython.display import display, HTML
 import difflib
 import re
 
@@ -417,6 +418,8 @@ class IrModel:
     def analyze_version_with_users_and_topics(self, curr_iteration, user_main_topics):
         print(f"DF: {self.df}")
         print(f"UserID DF: {self.df['UserID']}")
+        print(self.df.to_string())
+        display(HTML(self.df.to_html()))
         json_output = {}
         now = datetime.now()
         timestamp_model = datetime.timestamp(now)
