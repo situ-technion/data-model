@@ -422,7 +422,6 @@ class IrModel:
         print(f"DF: {self.df}")
         print(f"UserID DF: {self.df['UserID']}")
         print(self.df.to_string())
-        display(HTML(self.df.to_html()))
         json_output = {}
         now = datetime.now()
         timestamp_model = datetime.timestamp(now)
