@@ -417,21 +417,6 @@ class IrModel:
         return user_topics
 
     def analyze_version_with_users_and_topics(self, curr_iteration, user_main_topics):
-        pd.set_option('display.max_rows', None)
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.width', None)
-        pd.set_option('display.max_colwidth', -1)
-        print(f"DF: {self.df}")
-        print(f"UserID DF: {self.df['UserID']}")
-        print(self.df.to_string())
-        print("dvir")
-        print(self.df['CurrentDoc'][0])
-        print("dvir1")
-        print(self.df['CurrentDoc'][1])
-        print("dvir2")
-        print(self.df['CurrentDoc'][2])
-        print("dvir3")
-        print(self.df['CurrentDoc'][9])
         json_output = {}
         now = datetime.now()
         timestamp_model = datetime.timestamp(now)
