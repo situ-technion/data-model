@@ -270,9 +270,7 @@ class IrModel:
         self.known_interactions = self.df[:]
         self.user_topics = self.get_user_topics(self.known_interactions)
         self.user_main_topics = self.user_topics
-        self.curr_iteration = self.df.shape[0]
-        print("dvirlev")
-        print(self.curr_iteration)
+        self.curr_iteration = 10
         self.out = self.analyze_version_with_users_and_topics(self.curr_iteration, self.user_main_topics)
         self.mycol = self.mydb["output"]
         self.mycol.insert_one(self.out)
