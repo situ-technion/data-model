@@ -453,6 +453,7 @@ class IrModel:
             curr_user_name = curr_user
             json_output[curr_user]['user_name'] = curr_user_name
             last_visits = [visit for visit in self.df[self.df['UserID'] == curr_user].index if visit < last_version]
+            last_visit = max(last_visits)
 #            if len(last_visits) > 0:
 #                last_visit = max(last_visits)
 #            else:
