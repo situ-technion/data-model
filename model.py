@@ -270,7 +270,7 @@ class IrModel:
         self.known_interactions = self.df[:]
         self.user_topics = self.get_user_topics(self.known_interactions)
         self.user_main_topics = self.user_topics
-        self.curr_iteration = 10
+        self.curr_iteration = self.df.shape[0]
         self.out = self.analyze_version_with_users_and_topics(self.curr_iteration, self.user_main_topics)
         self.mycol = self.mydb["output"]
         self.mycol.insert_one(self.out)
@@ -453,11 +453,11 @@ class IrModel:
             curr_user_name = curr_user
             json_output[curr_user]['user_name'] = curr_user_name
             last_visits = [visit for visit in self.df[self.df['UserID'] == curr_user].index if visit < last_version]
-            if len(last_visits) > 0:
-                last_visit = max(last_visits)
-            else:
-                print('Nothing changed')
-                continue
+#            if len(last_visits) > 0:
+#                last_visit = max(last_visits)
+#            else:
+#                print('Nothing changed')
+#                continue
             old_text = self.clean_br(self.df['CurrentDoc'][last_visit])
             old_summary = self.top_sentence(old_text, 1)
             print('\t---------------' + str(last_version) + '->' + str(last_visit) + '---------------')
