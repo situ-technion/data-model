@@ -442,7 +442,7 @@ class IrModel:
         for topic in topics:
             locations[topic] = []
             print("new_test_debug" + new_text + " topic:" + topic)
-            occurrences = [m.start() for m in re.finditer(topic, new_text)]
+            occurrences = [m.start() for m in re.finditer(re.escape(topic), new_text)]
             for o in occurrences:
                 end = new_text.find('.', o, -1)
                 start = new_text.rfind('.', 0, o)
