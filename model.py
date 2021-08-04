@@ -276,7 +276,7 @@ class IrModel:
         self.mycol = self.mydb["output"]
         #rep = dict((re.escape(k), re.escape(v)) for k, v in self.out.items())
         
-        self.mycol.insert_one(loads(self.out))
+        self.mycol.insert_one(loads(json.dumps(self.out)))
 
     def clean_br(self, text):
         return text.replace('\n', ' ').replace('/n', ' ')
