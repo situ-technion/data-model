@@ -12,7 +12,6 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 import difflib
 import re
-from bson.json_util import loads
 
 THESE_ARE_YOURS_ = '-- Out of these topics, these are yours: '
 nltk.download('punkt')
@@ -274,9 +273,7 @@ class IrModel:
         self.curr_iteration = self.df.shape[0]
         self.out = self.analyze_version_with_users_and_topics(self.curr_iteration, self.user_main_topics)
         self.mycol = self.mydb["output"]
-        #rep = dict((re.escape(k), re.escape(v)) for k, v in self.out.items())
-        
-        self.mycol.insert_one(loads(json.dumps(self.out)))
+        self.mycol.insert_one(re.escape(json.dumps(self.out)))
 
     def clean_br(self, text):
         return text.replace('\n', ' ').replace('/n', ' ')
