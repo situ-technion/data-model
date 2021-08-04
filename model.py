@@ -273,8 +273,7 @@ class IrModel:
         self.curr_iteration = self.df.shape[0]
         self.out = self.analyze_version_with_users_and_topics(self.curr_iteration, self.user_main_topics)
         self.mycol = self.mydb["output"]
-        esc_dict = dict((re.escape(k), v) for k, v in self.out.items())
-        self.mycol.insert_one(esc_dict)
+        self.mycol.insert_one(self.out)
 
     def clean_br(self, text):
         return text.replace('\n', ' ').replace('/n', ' ')
@@ -308,7 +307,7 @@ class IrModel:
 
         tf_score = {}
         for each_word in total_words:
-            each_word = each_word.replace('.', '').replace('-', '').replace(',', '').replace('(', '').replace(')', '')
+            each_word = each_word.replace('.', '').replace('-', '').replace('$', '').replace(',', '').replace('(', '').replace(')', '')
             if each_word == '': continue
             if each_word not in stop_words:
                 if each_word in tf_score:
@@ -320,7 +319,7 @@ class IrModel:
 
         idf_score = {}
         for each_word in total_words:
-            each_word = each_word.replace('.', '')
+            each_word = each_word.replace('.', '').replace('$', '')
             if each_word not in stop_words:
                 if each_word in idf_score:
                     idf_score[each_word] = self.check_sent(each_word, total_sentences)
