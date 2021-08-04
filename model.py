@@ -425,19 +425,19 @@ class IrModel:
         new_summary = self.top_sentence(new_text, 1)
         par_num_new = self.df['CurrentDoc'][last_version].count('\n\n')
         row_num_new = self.df['CurrentDoc'][last_version].replace('\n\n', '').count('\n')
-        topics = self.extract_main_words(new_text, 25)
+        topics = self.extract_main_words(new_text, 10)
         print('The current version of the document was created by', last_user_name, ' in ',
               self.df['Timestamp'][last_version])
         json_output['timestamp'] = timestamp_model
         json_output['document_id'] = self.df['DocID'][last_version]
-        json_output['current version'] = {}
-        json_output['current version']['current_user_id'] = last_user_name
-        json_output['current version']['current_version_date'] = str(self.df['Timestamp'][last_version])
+        json_output['current_version'] = {}
+        json_output['current_version']['current_user_id'] = last_user_name
+        json_output['current_version']['current_version_date'] = str(self.df['Timestamp'][last_version])
         print('The current version in a few words: ' + new_summary)
-        json_output['current version']['current_version_summary'] = new_summary
+        json_output['current_version']['current_version_summary'] = new_summary
         print('The current version topics: ')
         print(topics)
-        json_output['current version']['current_version_topic'] = topics
+        json_output['current_version']['current_version_topic'] = topics
         locations = {}
         for topic in topics:
             locations[topic] = []
@@ -448,7 +448,7 @@ class IrModel:
                 start = new_text.rfind('.', 0, o)
                 if start == -1: start = 0
                 locations[topic] += [(start, end)]
-        json_output['current version']['current_version_topics_locations'] = locations
+        json_output['current_version']['current_version_topics_locations'] = locations
         for curr_user in user_main_topics:
             json_output[curr_user] = {'id': curr_user}
             curr_user_name = curr_user
@@ -494,7 +494,7 @@ class IrModel:
             user_topics = user_main_topics[curr_user]['my']
             users_topics_in_doc = list(set(topics).intersection(set(user_topics)))
             if len(users_topics_in_doc) == 0:
-                print('---None of your topics are in the top 25 current topics---')
+                print('---None of your topics are in the top 10 current topics---')
             diff_new, diff_old, inter = self.compute_main_words_delta(old_text, new_text, 50)
             users_topics_in_diff_new = {t: diff_new[t] * user_topics[t] for t in
                                         list(set(diff_new).intersection(set(user_topics)))}
