@@ -273,7 +273,8 @@ class IrModel:
         self.curr_iteration = self.df.shape[0]
         self.out = self.analyze_version_with_users_and_topics(self.curr_iteration, self.user_main_topics)
         self.mycol = self.mydb["output"]
-        self.mycol.insert_one(re.escape(json.dumps(self.out)))
+        esc_dict = dict((re.escape(k), v) for k, v in d.items())
+        self.mycol.insert_one(esc_dict)
 
     def clean_br(self, text):
         return text.replace('\n', ' ').replace('/n', ' ')
