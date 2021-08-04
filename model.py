@@ -273,7 +273,7 @@ class IrModel:
         self.curr_iteration = self.df.shape[0]
         self.out = self.analyze_version_with_users_and_topics(self.curr_iteration, self.user_main_topics)
         self.mycol = self.mydb["output"]
-        rep = dict((re.escape(k), v) for k, v in self.out.items())
+        rep = dict((re.escape(k), re.escape(v)) for k, v in self.out.items())
         self.mycol.insert_one(rep)
 
     def clean_br(self, text):
