@@ -35,32 +35,27 @@
   <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.1/src/wordcloud2.js"></script>
 
 	<script type="text/javascript">
-      google.script.run.withSuccessHandler(updateData).getDisplayData(); 
       var myChart;
-      var data;
+      var datain = '<?= data ?>';
+      var data = JSON.parse(datain);
+      
 
-      function updateData(values) {
-        data = values;
-        dashboardInit(data.normal);
+      function dashboardInit(currentData){
+          graphInit(currentData.chartdatasets);
+          wordCloudInit(currentData.wordcloud);
+      }
+      
+      function dashboardUpdate(currentData){
+          graphDatasetUpdate(currentData.chartdatasets);
+          wordCloudInit(currentData.wordcloud);
       }
 
       function highlightText(item) {   
           var topicName = item[0];
           var location_list = item.slice(2);
-          google.script.run.highlightText(location_list, topicName);
-      }
-
-      function graphInit(chartdatasets) {
-        myChart = new Chart(document.getElementById("volumeTimeGraph"), {
-          type: 'line',
-          data: {
-            labels: [1500,1600,1700,1750,1800,1850,1900,1950,1999,2050],
-            datasets: chartdatasets
-          },
-          options: {
-            responsive: true,
-          }
-        });
+          google.script.run.withFailureHandler(function(error){
+              console.log("Error in highlight" + error);
+          }).highlightText(location_list, topicName);
       }
 
       function stringToColour(str) {
@@ -76,22 +71,6 @@
           return colour;
       }
 
-      window.drawBox = function drawBox(item, dimension) {
-        var $box = $("#box");
-        if (!dimension) {
-          $box.prop('hidden', true);
-          return;
-        }
-
-        $box.prop('hidden', false);
-        $box.css({
-          left: dimension.x + 'px',
-          top: dimension.y + 'px',
-          width: dimension.w + 'px',
-          height: dimension.h + 'px'
-        });
-      };
-
       function wordCloudInit(wordlist) {
         var options = 
         {
@@ -103,62 +82,76 @@
           }
         };
         WordCloud(document.getElementById('wordCloud'), options);
-        $("#canvas-container").append('<div id="box" hidden />');
       }
 
       function graphDatasetUpdate(chartdatasets) {
         myChart.data.datasets = chartdatasets;
         myChart.update();
       }
-
-      function dashboardInit(currentData){
-          graphInit(currentData.chartdatasets);
-          wordCloudInit(currentData.wordcloud);
-      }
       
-      function dashboardUpdate(currentData){
-          graphDatasetUpdate(currentData.chartdatasets);
-          wordCloudInit(currentData.wordcloud);
+      function graphInit(chartdatasets) {
+        myChart = new Chart(document.getElementById("volumeTimeGraph"), {
+          type: 'line',
+          data: {
+            labels: [1500,1600,1700,1750,1800,1850,1900,1950,1999,2050],
+            datasets: chartdatasets
+          }
+        });
       }
 
       $(document).ready( function () {
-        $("#refresh").button({
-          icon: "ui-icon-arrowrefresh-1-e",
-          showLabel: false
-        });
-        $("#info").button({
-          icon: "ui-icon-info",
-          showLabel: false
-        });
+        dashboardInit(data.normal);
 
         $("#dialog").dialog({
           autoOpen: false
         });
- 
-        $("#info").click(function() {
+
+        $("#refresh").button({
+          icon: "ui-icon-arrowrefresh-1-e",
+          showLabel: false
+        }).click(function() {
+            google.script.run.withFailureHandler(function(error){
+              console.log("Error in refresh" + error);
+            }).openDoc();
+        });
+
+        $("#info").button({
+          icon: "ui-icon-info",
+          showLabel: false
+        }).click(function() {
             $("#dialog").dialog("open");
         });
 
-        $(".filterby").checkboxradio();
-        $(".filterby").change(function() {
+        $(".filterby").checkboxradio().change(function() {
           if ($(this).attr('id') == "relevance-me") { 
             dashboardUpdate(data.relative);
           } else {
             dashboardUpdate(data.normal);
           }
         });
+      });
+        // $("#content *").click(function() {
+        //   var eventType = "click";
+        //   var targetId = $(this).attr('id');
+        //   google.script.run.sendClickDataToDB(eventType, targetId);
+        // });
+              // window.drawBox = function drawBox(item, dimension) {
+      //   var $box = $("#box");
+      //   if (!dimension) {
+      //     $box.prop('hidden', true);
+      //     return;
+      //   }
 
-        $("#refresh").click(function() {
-          google.script.run.onOpen();
-        });
-
-        $("#content *").click(function() {
-          var eventType = "click";
-          var targetId = $(this).attr('id');
-          google.script.run.sendClickDataToDB(eventType, targetId);
-        });
+      //   $box.prop('hidden', false);
+      //   $box.css({
+      //     left: dimension.x + 'px',
+      //     top: dimension.y + 'px',
+      //     width: dimension.w + 'px',
+      //     height: dimension.h + 'px'
+      //   });
+      // };
         
-		});
+		
 	</script>
    <base target="_top">
   </head>
