@@ -1,15 +1,17 @@
-// Global variables
+// -- Global Variables --
 var doc = DocumentApp.getActiveDocument();
 var body = doc.getBody();
-var tempActiveUser = Session.getTemporaryActiveUserKey();
-var strippedUser = tempActiveUser.replaceAll(/\s+/g, '-').replaceAll('+', '-');
+var strippedUser = Session.getTemporaryActiveUserKey().replaceAll(/\s+/g, '-').replaceAll('+', '-');
+var hebrewEnglishPattern = /[^a-zA-Z\u0590-\u05FF\u200f\u200e\n/n\r\.\, ]/g; // Only Hebrew and English, no special chars
+// ----------------------
 
 function onInstall(e) {
-  createDocOpenTrigger();
+  onOpen(e);
+  openDoc();
 }
 
-function createDocOpenTrigger(){
-    var triggers = getProjectTriggersByName('openDoc');
+function onOpen(e){
+    var triggers = getProjectTriggersByName('openDoc');  
     if (triggers.length == 0) {
       ScriptApp.newTrigger('openDoc')
           .forDocument(doc)
@@ -25,10 +27,7 @@ function getProjectTriggersByName(name) {
 }
 
 function openDoc() {
-  doc = DocumentApp.getActiveDocument();
-  body = doc.getBody();
-  tempActiveUser = Session.getTemporaryActiveUserKey();
-  strippedUser = tempActiveUser.replaceAll(/\s+/g, '-').replaceAll('+', '-');
+  clearDocBackground();
   refresh();
   initUI();
   main();
@@ -39,12 +38,13 @@ function refresh() {
   calculateModel();
 }
 
-function sendDataToDB(){
+function sendDataToDB(){    
+    var cleanbody = body.getText().replace(hebrewEnglishPattern, '');
     var myData = {
         'documentId': doc.getId(),
         'timestamp' : new Date(),
         'hashedUserId' : strippedUser,
-        'text' : body.getText()
+        'text' : cleanbody
         //'comments' : getComments()
     };
 
@@ -57,10 +57,17 @@ function sendDataToDB(){
     
     var url = "https://webhooks.mongodb-realm.com/api/client/v2.0/app/situ-xkfcm/service/situ/incoming_webhook/insert_doc";
 
-    try {
-      UrlFetchApp.fetch(url, options);
-    } catch(e) {
-      Logger.log("Send data to DB error" + e);
+    count = 0;
+    while (count < 3) {
+      try {
+          Logger.log("Send data to DB #" + count);
+          UrlFetchApp.fetch(url, options);
+          count = 3;
+      } catch(e) {
+          Utilities.sleep(500);
+          count = count + 1;
+          Logger.log("error" + e);
+      }
     }
 }
 
@@ -70,11 +77,18 @@ function calculateModel(){
         'muteHttpExceptions': false
     };
     var url = "https://situ-technion.herokuapp.com/model/" + doc.getId();
-    
-    try {
-      UrlFetchApp.fetch(url, options);
-    } catch(e) {
-      Logger.log("calculate model error" + e);
+
+    count = 0;
+    while (count < 3) {
+      try {
+        Logger.log("calculate model #" + count);
+        UrlFetchApp.fetch(url, options);
+        count = 3;
+      } catch(e) {
+        Utilities.sleep(500);
+        count = count + 1;
+        Logger.log("error" + e);
+      }
     }
 }
 
@@ -82,7 +96,6 @@ function initUI() {
   DocumentApp.getUi()
         .createMenu('SITU')
         .addItem('Open dashboard','main')
-        .addItem('Uninstall request','uninstallRequest')
         .addToUi();
 }
 
@@ -90,24 +103,27 @@ function main() {
   displayWindowPage("index");
 }
 
-function uninstallRequest() {
-  displayWindowPage("uninstallRequest");
-}
-
 function getDisplayData() {
   var url = "https://webhooks.mongodb-realm.com/api/client/v2.0/app/situ-xkfcm/service/situ/incoming_webhook/get_model?docId=" + doc.getId() + "&userId=" + strippedUser;
   var response;
   var jsonData;
 
-  try {
-      response = UrlFetchApp.fetch(url, { 'muteHttpExceptions': false });
-      if (response != false) {
-        jsonData = JSON.parse(response.getContentText());
-      } else {
-        throw new Error("Empty response"); 
-      }
-  } catch(e) {
-      Logger.log("display data error" + e);
+  count = 0;
+  while (count < 3) {
+    try {
+        Logger.log("display data #" + count);
+        response = UrlFetchApp.fetch(url, { 'muteHttpExceptions': false });
+        count = 3;
+        if (response != false) {
+          jsonData = JSON.parse(response.getContentText());
+        } else {
+          throw new Error("Empty response"); 
+        }
+    } catch(e) {
+        Utilities.sleep(500);
+        count = count + 1;
+        Logger.log("error" + e);
+    }
   }
   
   // Wordcloud list structure: topic, font-size, [[start end]...
@@ -115,6 +131,8 @@ function getDisplayData() {
   var chartdatasetsArr = [];
   var relativeWordcloudArr = [];
   var relativeWchartdatasetsArr = [];
+  var timestamp = [];
+  var major = [];
 
   try {
       var current_topic = jsonData["current_version"]["current_version_topic"];
@@ -128,7 +146,7 @@ function getDisplayData() {
             function([keyInner, valueInner]) {
               topic_location.push([keyInner['$numberInt'], valueInner['$numberInt']]);
             });
-            relativeWordcloudArr.push([key, parseInt(Object.entries(value)[0][1])*20, [topic_location]])
+            relativeWordcloudArr.push([key, calcWordSize(parseFloat(Object.entries(value)[0][1])), [topic_location]])
         }
       });
 
@@ -139,51 +157,36 @@ function getDisplayData() {
           function([keyInner, valueInner]) {
             topic_location.push([keyInner['$numberInt'], valueInner['$numberInt']]);
           });
-          wordcloudArr.push([key, parseInt(Object.entries(value)[0][1])*20, [topic_location]])
+          wordcloudArr.push([key, calcWordSize(parseFloat(Object.entries(value)[0][1])), [topic_location]])
       });
 
+
+      graphData(timestamp, major);
+
       chartdatasetsArr = [{ 
-                  data: [1100,1600,1700,1750,1800,1850,1900,1950,1999,2050],
-                  label: "Topic2 - Dvir.levanon@gmail.com",
-                  borderColor: stringToColour("Topic2"),
-                  fill: false
-              }, { 
-                  data: [1100,1600,1750,1800,1850,1900,1950,1999,2050],
-                  label: "Topic3 - Dvir.levanon@gmail.com",
-                  borderColor: stringToColour("Topic3"),
-                  fill: false
-              },{ 
-                  data: [1700,1750,1800,1850,1900,1950,1999,2050],
-                  label: "Topic5 - Dvir.levanon@gmail.com",
-                  borderColor: stringToColour("Topic5"),
-                  fill: false
+                  data: major,
+                  label: "You",
+                  //borderColor: stringToColour("Topic2"),
+                  fill: true
               }];
 
       relativeWchartdatasetsArr = [{ 
-                  data: [1100,1600,1700,1750,1800,1850,1900,1950,1999,2050],
-                  label: "Topic2 - Dvir.levanon@gmail.com",
-                  borderColor: stringToColour("Topic2"),
-                  fill: false
-              }, { 
-                  data: [1100,1600,1750,1800,1850,1900,1950,1999,2050],
-                  label: "Topic3 - Dvir.levanon@gmail.com",
-                  borderColor: stringToColour("Topic3"),
-                  fill: false
-              },{ 
-                  data: [1700,1750,1800,1850,1900,1950,1999,2050],
-                  label: "Topic5 - Dvir.levanon@gmail.com",
-                  borderColor: stringToColour("Topic5"),
-                  fill: false
+                  data: major,
+                  label: "You",
+                  //borderColor: stringToColour("Topic2"),
+                  fill: true
               }];
 
       var data = {
           normal: { 
             wordcloud: wordcloudArr,
-            chartdatasets: chartdatasetsArr
+            chartdatasets: chartdatasetsArr,
+            graphx: timestamp
           },
           relative: {
             wordcloud: relativeWordcloudArr,
-            chartdatasets: relativeWchartdatasetsArr
+            chartdatasets: relativeWchartdatasetsArr,
+            graphx: timestamp
           }
       };
   } catch(e) {
@@ -192,16 +195,70 @@ function getDisplayData() {
   return JSON.stringify(data);
 }
 
+ //   Format: [{
+  //   "_id": {
+  //     "$oid": "61727e59c5d7081bfb598a0f"
+  //   },
+  //   "timestamp": {
+  //     "$numberDouble": "1634893401.21035"
+  //   },
+  //   "APrZferNGXg8aVAn9bSVNFt0pVZQ0uStt8OEhnUEq2i5osRwCVeS1jnKHi0Y/T0WeryBTki3lmSK": {
+  //     "major_revisions_count": {
+  //       "$numberInt": "0"
+  //     }
+  //   }
+  // }]
+function graphData(timestamp, major) {
+      var url = "https://webhooks.mongodb-realm.com/api/client/v2.0/app/situ-xkfcm/service/situ/incoming_webhook/get_graph?docId=" + doc.getId() + "&userId=" + strippedUser;
+      var response;
+      var jsonDataGraph;
+
+      count = 0;
+      while (count < 3) {
+        try {
+            Logger.log("Graph data #" + count);
+            response = UrlFetchApp.fetch(url, { 'muteHttpExceptions': false });
+            count = 3;
+            if (response != false) {
+              jsonDataGraph = JSON.parse(response.getContentText());
+            } else {
+              throw new Error("Empty response"); 
+            }
+        } catch(e) {
+            Utilities.sleep(500);
+            count = count + 1;
+            Logger.log("error" + e);
+        }
+      }
+      
+      Object.entries(jsonDataGraph).forEach( 
+        function([key, value]) {
+          timestamp.push(new Date(value.timestamp['$numberDouble']*1000).toISOString().replace("T", ' ').replace(/:[^:]*$/,''));
+          major.push(value[strippedUser]["major_revisions_count"]['$numberInt'] + value[strippedUser]["minor_revisions_count"]['$numberInt']);
+      });
+}
+
 // // --- Functionallity ---
 
 function displayWindowPage(page) {
   var template = HtmlService.createTemplateFromFile(page);
-
-  if (page == "index") {
-    template.data = getDisplayData();
-  }
-
+  template.data = getDisplayData();
   DocumentApp.getUi().showSidebar(template.evaluate().setTitle("SITU - collaborative writing"));
+}
+
+function highlightText(topic) {
+  bgcolor = stringToColour(topic);
+  foundElement = DocumentApp.getActiveDocument().getBody().findText(topic);
+  var position = doc.newPosition(foundElement.getElement(), foundElement.getStartOffset());
+  doc.setCursor(position);
+
+  while (foundElement != null) {
+    if (foundElement.getElement().asText().getBackgroundColor() != null) {
+      bgcolor = null;
+    }
+    foundElement.getElement().asText().setBackgroundColor(bgcolor);
+    foundElement = DocumentApp.getActiveDocument().getBody().findText(topic, foundElement);
+  }
 }
 
 function stringToColour(str) {
@@ -217,16 +274,13 @@ function stringToColour(str) {
     return colour;
 }
 
-function highlightText(position_lst, topic) {
-  Logger.log("inside highligh");
-  position_lst = position_lst.flat(3);
-  bgcolor = stringToColour(topic);
-  if (body.editAsText().getBackgroundColor(position_lst[0]) != null) {
-      bgcolor = null;
-  }
-  for (var i = 0; i < position_lst.length; i+=2) {
-    body.editAsText().setBackgroundColor(position_lst[i], position_lst[i+1], bgcolor);
-  }
+function calcWordSize(wordWeight) {
+  return (wordWeight > 0)? wordWeight * 20: 20;
+}
+
+function clearDocBackground() {
+  content_length = body.editAsText().getText().length - 1;
+  body.editAsText().asText().setBackgroundColor(0 ,content_length, null);
 }
 
 // function sendClickDataToDB(eventType, targetId){
