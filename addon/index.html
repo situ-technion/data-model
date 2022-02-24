@@ -41,12 +41,12 @@
       
 
       function dashboardInit(currentData){
-          graphInit(currentData.chartdatasets);
+          graphInit(currentData.chartdatasets, currentData.graphx);
           wordCloudInit(currentData.wordcloud);
       }
       
       function dashboardUpdate(currentData){
-          graphDatasetUpdate(currentData.chartdatasets);
+          graphDatasetUpdate(currentData.chartdatasets, currentData.graphx);
           wordCloudInit(currentData.wordcloud);
       }
 
@@ -55,7 +55,7 @@
           var location_list = item.slice(2);
           google.script.run.withFailureHandler(function(error){
               console.log("Error in highlight" + error);
-          }).highlightText(location_list, topicName);
+          }).highlightText(topicName);
       }
 
       function stringToColour(str) {
@@ -84,16 +84,17 @@
         WordCloud(document.getElementById('wordCloud'), options);
       }
 
-      function graphDatasetUpdate(chartdatasets) {
+      function graphDatasetUpdate(chartdatasets, graphx) {
+        myChart.data.labels = graphx;
         myChart.data.datasets = chartdatasets;
         myChart.update();
       }
       
-      function graphInit(chartdatasets) {
+      function graphInit(chartdatasets, graphx) {
         myChart = new Chart(document.getElementById("volumeTimeGraph"), {
           type: 'line',
           data: {
-            labels: [1500,1600,1700,1750,1800,1850,1900,1950,1999,2050],
+            labels: graphx,
             datasets: chartdatasets
           }
         });
@@ -158,7 +159,7 @@
   <body>
        <div id="content">
          <div id="dialog" title="SITU Information">
-            <p>This is an animated dialog which is useful for displaying information. The dialog window can be moved, resized and closed with the &apos;x&apos; icon.</p>
+            <p>To remove SITU please send mail to: dvir.levanon@campus.technion.ac.il</p>
          </div>
          <img src="https://situ-technion.herokuapp.com/statics/image.png" id="logo" />
          <div id="actions">
