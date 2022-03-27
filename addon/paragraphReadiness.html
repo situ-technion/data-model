@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+
+    <script type="text/javascript">
+      function onFailure(error) {
+        var div = document.getElementById('output');
+        console.log("HTML error " + error);
+      }
+      function addPRIconLow() {   
+        console.log("HTML running addPRIconLow");
+        google.script.run.withFailureHandler(onFailure).callLibraryFunction("SITULib.addPRIconLow");
+      }
+      function addPRIconMed() {   
+        console.log("HTML running addPRIconMed");
+        google.script.run.withFailureHandler(onFailure).callLibraryFunction("SITULib.addPRIconMed");
+      }
+      function addPRIconHigh() {   
+        console.log("HTML running addPRIconHigh");
+        google.script.run.withFailureHandler(onFailure).callLibraryFunction("SITULib.addPRIconHigh");
+      }
+      </script>
+  </head>
+  <body>
+    <p style="text-align: center;">
+      <img style="display: block; margin-left: auto; margin-right: auto;" src="https://situ-technion.herokuapp.com/statics/image.png" alt="" width="57" height="84" />
+      Paragraph readiness
+    </p>
+
+    <p>
+      <table style="border-collapse: collapse; width: 100%;" border="1">
+        <tbody>
+        <tr>
+        <td style="text-align: center;"><input height="64" src="https://situ-technion.herokuapp.com/statics/red64x64.png" type="image" width="64" onclick="addPRIconLow()"/></td>
+        <td style="text-align: center;"><input height="64" src="https://situ-technion.herokuapp.com/statics/yellow64x64.png" type="image" width="64" onclick="addPRIconMed()"/></td>
+        <td style="text-align: center;"><input height="64" src="https://situ-technion.herokuapp.com/statics/green64x64.png" type="image" width="64" onclick="addPRIconHigh()"/></td>
+        </tr>
+        <tr>
+        <td style="text-align: center;">Need help</td>
+        <td>&nbsp;</td>
+        <td style="text-align: center;">Done</td>
+        </tr>
+        </tbody>
+      </table>
+    </p>
+
+  </body>
+</html>
