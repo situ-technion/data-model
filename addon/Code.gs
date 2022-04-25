@@ -51,49 +51,65 @@ function addPRIconHigh() {
 }
 
 function addPRIcon(blob) {
-  Logger.log('SITU image blob ' + blob);
-  var doc = DocumentApp.getActiveDocument();
-  if (doc == null) return;
+  Logger.log('SITU addPRIcon image blob ' + blob);
    
-  var elementInParagraph;
-  var cursor = doc.getCursor();
-  console.log('SITU cursor ' +  cursor);
-  if (cursor) {
-    elementInParagraph = cursor.getElement();
-    console.log('SITU element from cursor ' +  elementInParagraph);
+  var elementInParagraph = getSelectedElement();
+  
+  var paragraph = getParagraphFromElement(elementInParagraph);
+
+  removePositionsImagesFromParagraph(paragraph);
+
+  if (paragraph) {
+    
+    // Add the PositionedImage with offsets (in points).
+    var posImage = paragraph.addPositionedImage(blob)
+      .setTopOffset(0)
+      .setLeftOffset(450) // 0 or page width for RTL
+      .setWidth(32)
+      .setHeight(32)
+      .setLayout(DocumentApp.PositionedLayout.WRAP_TEXT);
+
+      console.log('SITU addPRIcon adding readiness image ' +  posImage);
+      //Logger.log('SITU image blob after positioning ' + blob);
   }
 
-  var selection = doc.getSelection();
-  console.log('SITU selection ' +  selection);
-  if (selection) {
-    var elements = selection.getSelectedElements();
-    if (elements.length > 0) {
-      elementInParagraph = elements[0].getElement();
+}
+
+function removePositionsImagesFromParagraph(paragraph) {
+  if (paragraph == null) return;
+
+  // Remove previous image
+    var positionedImages = paragraph.getPositionedImages();
+    for(var i=0; i<positionedImages.length; i++) {
+      paragraph.removePositionedImage( positionedImages[i].getId());
     }
-  }
+}
 
-  console.log('SITU element selected ' +  elementInParagraph);
-  if (elementInParagraph) {
-    var paragraph = getParagraphFromElement(elementInParagraph);
-    console.log('SITU paragraph from element ' +  paragraph);
-    if (paragraph) {
-      // Remove previous image
-      var positionedImages = paragraph.getPositionedImages();
-      for(var i=0; i<positionedImages.length; i++) {
-        paragraph.removePositionedImage( positionedImages[i].getId());
+function getSelectedElement() {
+
+  var elementInParagraph = null;
+  var doc = DocumentApp.getActiveDocument();
+  if (doc != null) {
+  
+    var cursor = doc.getCursor();
+    console.log('SITU getSelectedElement cursor ' +  cursor);
+    if (cursor) {
+      elementInParagraph = cursor.getElement();
+      console.log('SITU getSelectedElement element from cursor ' +  elementInParagraph);
+    }
+
+    var selection = doc.getSelection();
+    console.log('SITU getSelectedElement selection ' +  selection);
+    if (selection) {
+      var elements = selection.getSelectedElements();
+      if (elements.length > 0) {
+        elementInParagraph = elements[0].getElement();
       }
-      // Add the PositionedImage with offsets (in points).
-      var posImage = paragraph.addPositionedImage(blob)
-        .setTopOffset(0)
-        .setLeftOffset(450) // 0 or page width for RTL
-        .setWidth(32)
-        .setHeight(32)
-        .setLayout(DocumentApp.PositionedLayout.WRAP_TEXT);
-
-        console.log('SITU adding readiness image ' +  posImage);
-        //Logger.log('SITU image blob after positioning ' + blob);
     }
   }
+  console.log('SITU getSelectedElement element selected ' +  elementInParagraph);
+
+  return elementInParagraph;
 }
 
 function getParagraphFromElement(element) {
@@ -103,6 +119,7 @@ function getParagraphFromElement(element) {
     paragraph = paragraph.getParent();
   } 
 
+  console.log('SITU getParagraphFromElement ' +  paragraph);
   return paragraph;
 }
 

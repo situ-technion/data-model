@@ -2,7 +2,7 @@
 <html>
   <head>
     <base target="_top">
-
+    <!-- link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css "-->
     <script type="text/javascript">
       function onFailure(error) {
         var div = document.getElementById('output');
@@ -25,7 +25,7 @@
   <body>
     <p style="text-align: center;">
       <img style="display: block; margin-left: auto; margin-right: auto;" src="https://situ-technion.herokuapp.com/statics/image.png" alt="" width="57" height="84" />
-      Paragraph readiness
+      מוכנות הפסקה
     </p>
 
     <p>
@@ -37,13 +37,30 @@
         <td style="text-align: center;"><input height="64" src="https://situ-technion.herokuapp.com/statics/green64x64.png" type="image" width="64" onclick="addPRIconHigh()"/></td>
         </tr>
         <tr>
-        <td style="text-align: center;">Need help</td>
+        <td style="text-align: center;">דורש עבודה</td>
         <td>&nbsp;</td>
-        <td style="text-align: center;">Done</td>
+        <td style="text-align: center;">מוכן</td>
         </tr>
         </tbody>
       </table>
     </p>
 
+    <div class="block">
+        <label for="whatIWorkedOn" style="text-align: center;">על מה עבדתי</label>
+
+        <textarea id="whatIWorkedOn" name="whatIWorkedOn" rows="10" cols="35">
+        </textarea>
+    </div>
+
+
+    <div class="block">
+        <label for="whatElseNeedsWork" style="text-align: center;">היכן נדרשת עוד עבודה</label>
+
+        <textarea id="whatElseNeedsWork" name="whatElseNeedsWork" rows="10" cols="35">
+        </textarea>
+    </div>
+
+    <p><button type="button">שמור</button></p>
   </body>
 </html>
+  
