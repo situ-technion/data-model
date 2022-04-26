@@ -13,6 +13,17 @@
         console.log("HTML running onLoadPRSuccess workedOn.value:" + params['WORKED_ON']);
         todo.value = params['TODO'];
         console.log("HTML running onLoadPRSuccess workedOn.value:" + params['TODO']);
+
+        markPRSelection(params['IMAGE_ID']);
+      }
+
+      function markPRSelection(imageId) {
+        var tableCells = document.getElementById("prTable").getElementsByTagName("td");
+        for (cell of tableCells) {
+          cell.style.backgroundColor = "";   
+        }
+        var prIcon = document.getElementById(imageId);
+        prIcon.style.backgroundColor = "#999999";
       }
 
       function onSavePRSuccess(imageId) {
@@ -32,6 +43,8 @@
 
         var todo = document.getElementById('whatElseNeedsWork').value;
         console.log("todo value:" + todo);
+
+        markPRSelection(imageIdx);
 
         var params = [imageIdx, workedOn, todo];
 
@@ -82,12 +95,12 @@
     </p>
 
     <p>
-      <table style="border-collapse: collapse; width: 100%;" border="1">
+      <table id="prTable" style="border-collapse: collapse; width: 100%;" border="1">
         <tbody>
         <tr>
-        <td style="text-align: center;"><input height="64" src="https://situ-technion.herokuapp.com/statics/red64x64.png" type="image" width="64" onclick="addPRIconLow()"/></td>
-        <td style="text-align: center;"><input height="64" src="https://situ-technion.herokuapp.com/statics/yellow64x64.png" type="image" width="64" onclick="addPRIconMed()"/></td>
-        <td style="text-align: center;"><input height="64" src="https://situ-technion.herokuapp.com/statics/green64x64.png" type="image" width="64" onclick="addPRIconHigh()"/></td>
+        <td id="0" style="text-align: center;"><input height="64" src="https://situ-technion.herokuapp.com/statics/red64x64.png" type="image" width="64" onclick="addPRIconLow()"/></td>
+        <td id="1" style="text-align: center;"><input height="64" src="https://situ-technion.herokuapp.com/statics/yellow64x64.png" type="image" width="64" onclick="addPRIconMed()"/></td>
+        <td id="2" style="text-align: center;"><input height="64" src="https://situ-technion.herokuapp.com/statics/green64x64.png" type="image" width="64" onclick="addPRIconHigh()"/></td>
         </tr>
         <tr>
         <td style="text-align: center;">דורש עבודה</td>
