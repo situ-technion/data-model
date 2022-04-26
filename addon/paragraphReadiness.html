@@ -4,21 +4,74 @@
     <base target="_top">
     <!-- link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css "-->
     <script type="text/javascript">
+      function onLoadPRSuccess(params) {
+        console.log("HTML running onLoadPRSuccess " + params);
+        var workedOn = document.getElementById('whatIWorkedOn');
+        var todo = document.getElementById('whatElseNeedsWork');
+
+        workedOn.value = params['WORKED_ON'];
+        console.log("HTML running onLoadPRSuccess workedOn.value:" + params['WORKED_ON']);
+        todo.value = params['TODO'];
+        console.log("HTML running onLoadPRSuccess workedOn.value:" + params['TODO']);
+      }
+
+      function onSavePRSuccess(imageId) {
+        console.log("HTML running onSavePRSuccess, got id:" + imageId);
+      }
+
       function onFailure(error) {
         var div = document.getElementById('output');
         console.log("HTML error " + error);
       }
+
+      function addPRIcon(imageIdx) {
+        console.log("HTML running addPRIcon, index ", imageIdx);
+
+        var workedOn = document.getElementById('whatIWorkedOn').value;
+        console.log("workedOn value:" + workedOn);
+
+        var todo = document.getElementById('whatElseNeedsWork').value;
+        console.log("todo value:" + todo);
+
+        var params = [imageIdx, workedOn, todo];
+
+        console.log("metaData value:" + params);
+
+        google.script.run
+          .withFailureHandler(onFailure)
+          .withSuccessHandler(onSavePRSuccess)
+          .callLibraryFunction("SITULib.addPRIcon", params);
+      }
+
       function addPRIconLow() {   
         console.log("HTML running addPRIconLow");
-        google.script.run.withFailureHandler(onFailure).callLibraryFunction("SITULib.addPRIconLow");
+
+        addPRIcon(0);
       }
+
       function addPRIconMed() {   
         console.log("HTML running addPRIconMed");
-        google.script.run.withFailureHandler(onFailure).callLibraryFunction("SITULib.addPRIconMed");
+        addPRIcon(1);
       }
+
       function addPRIconHigh() {   
         console.log("HTML running addPRIconHigh");
-        google.script.run.withFailureHandler(onFailure).callLibraryFunction("SITULib.addPRIconHigh");
+        addPRIcon(2);
+      }
+
+      function savePR() {
+        console.log("HTML running savePR");
+        google.script.run
+        .withFailureHandler(onFailure)
+        .callLibraryFunction("SITULib.savePR");
+      }
+
+      function loadPR() {
+        console.log("HTML running loadPR");
+        google.script.run
+        .withFailureHandler(onFailure)
+        .withSuccessHandler(onLoadPRSuccess)
+        .callLibraryFunction("SITULib.loadPR");
       }
       </script>
   </head>
@@ -60,7 +113,8 @@
         </textarea>
     </div>
 
-    <p><button type="button">שמור</button></p>
+    <p><button type="button" onclick="savePR()">שמור</button></p>
+    <p><button type="button" onclick="loadPR()">רענן</button></p>
   </body>
 </html>
   

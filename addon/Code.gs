@@ -1,3 +1,11 @@
+
+
+var readinessIcons = ['https://situ-technion.herokuapp.com/statics/red64x64.png',
+'https://situ-technion.herokuapp.com/statics/yellow64x64.png',
+'https://situ-technion.herokuapp.com/statics/green64x64.png'];
+
+var IMAGE_ID = 'IMAGE_ID', WORKED_ON = 'WORKED_ON', TODO = 'TODO';
+
 function openDoc(){
   tempActiveUser = Session.getTemporaryActiveUserKey();
   strippedUser = tempActiveUser.replaceAll(/\s+/g, '-').replaceAll('+', '-');
@@ -22,36 +30,11 @@ function createDocOpenTrigger(){
   }
 }
 
-var readinessIcons = [];
+function addPRIcon(imageId, workedOn, todo) {
+  Logger.log('SITU addPRIcon params ', imageId, workedOn, todo);
 
-function loadIcons() {
-  readinessIcons[0] = UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/red64x64.png').getBlob().copyBlob();
-  readinessIcons[1] = UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/yellow64x64.png').getBlob().copyBlob();
-  readinessIcons[2] = UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/green64x64.png').getBlob().copyBlob();
-}
-
-function addPRIconLow() {
-  Logger.log('SITULib addPRIconLow');
-  //addWiFiIcon(UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/red64x64.png').getBlob());
-  /*Logger.log('SITULib addPRIconLow cache ' + readinessIcons[0]);
-  if (readinessIcons[0] == null) {
-    readinessIcons[0] = UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/red64x64.png').getBlob();
-    Logger.log('SITULib addPRIconLow adding ' + readinessIcons[0]);
-  }*/
-  addPRIcon(UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/red64x64.png').getBlob());
-}
-
-function addPRIconMed() {
-  Logger.log('SITULib addPRIconMed');
-  addPRIcon(UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/yellow64x64.png').getBlob());
-}
-function addPRIconHigh() {
-  Logger.log('SITULib addPRIconHigh');
-  addPRIcon(UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/green64x64.png').getBlob());
-}
-
-function addPRIcon(blob) {
-  Logger.log('SITU addPRIcon image blob ' + blob);
+  Logger.log('SITU addPRIcon image id ' + imageId);
+  var blob = UrlFetchApp.fetch(readinessIcons[imageId]).getBlob()
    
   var elementInParagraph = getSelectedElement();
   
@@ -69,8 +52,20 @@ function addPRIcon(blob) {
       .setHeight(32)
       .setLayout(DocumentApp.PositionedLayout.WRAP_TEXT);
 
-      console.log('SITU addPRIcon adding readiness image ' +  posImage);
-      //Logger.log('SITU image blob after positioning ' + blob);
+
+    console.log('SITU addPRIcon adding readiness image ' +  posImage);
+
+    var params = {};
+    params[IMAGE_ID] = imageId;
+    params[WORKED_ON] = workedOn;
+    params[TODO] = todo;
+
+    var metaData = JSON.stringify(params);
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty(posImage.getId(), metaData);
+
+    Logger.log('SITU addPRIcon add metaData ID:' + posImage.getId() + ' value: ' + metaData);
+    return posImage.getId();
   }
 
 }
@@ -78,11 +73,15 @@ function addPRIcon(blob) {
 function removePositionsImagesFromParagraph(paragraph) {
   if (paragraph == null) return;
 
+var documentProperties = PropertiesService.getDocumentProperties();
+
   // Remove previous image
     var positionedImages = paragraph.getPositionedImages();
     for(var i=0; i<positionedImages.length; i++) {
       paragraph.removePositionedImage( positionedImages[i].getId());
+      documentProperties.deleteProperty(positionedImages[i].getId());
     }
+
 }
 
 function getSelectedElement() {
@@ -123,29 +122,30 @@ function getParagraphFromElement(element) {
   return paragraph;
 }
 
+function savePR(done, todo) {
+
+}
+
+function loadPR() {
+
+  var elementInParagraph = getSelectedElement();
+  
+  var paragraph = getParagraphFromElement(elementInParagraph);
+
+  if (paragraph) {
+    var positionedImages = paragraph.getPositionedImages();
+    if (positionedImages.length > 0) {
+      var documentProperties = PropertiesService.getDocumentProperties();
+
+      var metaData = documentProperties.getProperty(positionedImages[0].getId());
+      metaDataObj = JSON.parse(metaData);
+      return metaDataObj;
+    }
+  }
+}
+
 function displayWindowPage(page) {
   var template = HtmlService.createTemplateFromFile(page);
-/*
-  if (page == "index") {
-    template.data = getDisplayData();
-  }
-
-  var blob = UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/red64x64.png').getBlob();
-    console.log('SITU blob ' +  blob);
-
-  readinessIcons[0]= UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/red64x64.png').getBlob();
-  console.log('SITU adding readiness image to array ' +  readinessIcons[0]);
-
-  readinessIcons[1]= UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/yellow64x64.png').getBlob();
-  readinessIcons[2]= UrlFetchApp.fetch('https://situ-technion.herokuapp.com/statics/green64x64.png').getBlob();
-*/
   DocumentApp.getUi().showSidebar(template.evaluate().setTitle("SITU - collaborative writing"));
 }
-/*
-function openFloatingWindow() {
-  var htmlOutput = HtmlService.createHtmlOutputFromFile('paragraphReadiness')
-    //.createHtmlOutput('<p>A change of speed, a change of style...</p>')
-    .setWidth(250)
-    .setHeight(300);
-DocumentApp.getUi().showModelessDialog(htmlOutput, 'Paragraph readiness');
-}*/
+
