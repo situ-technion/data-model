@@ -4,7 +4,7 @@ var readinessIcons = ['https://situ-technion.herokuapp.com/statics/red64x64.png'
 'https://situ-technion.herokuapp.com/statics/yellow64x64.png',
 'https://situ-technion.herokuapp.com/statics/green64x64.png'];
 
-var IMAGE_ID = 'IMAGE_ID', WORKED_ON = 'WORKED_ON', TODO = 'TODO';
+var IMAGE_ID = 'IMAGE_ID', WORKED_ON = 'WORKED_ON', TODO = 'TODO', TASKLIST = 'TASK_LIST', HISTORYLIST = 'HISTORY_LIST';
 
 function openDoc(){
   tempActiveUser = Session.getTemporaryActiveUserKey();
@@ -30,8 +30,7 @@ function createDocOpenTrigger(){
   }
 }
 
-function addPRIcon(imageId, workedOn, todo) {
-  Logger.log('SITU addPRIcon params ', imageId, workedOn, todo);
+function addPRIcon(imageId) {
 
   Logger.log('SITU addPRIcon image id ' + imageId);
   var blob = UrlFetchApp.fetch(readinessIcons[imageId]).getBlob()
@@ -55,16 +54,6 @@ function addPRIcon(imageId, workedOn, todo) {
 
     console.log('SITU addPRIcon adding readiness image ' +  posImage);
 
-    var params = {};
-    params[IMAGE_ID] = imageId;
-    params[WORKED_ON] = workedOn;
-    params[TODO] = todo;
-
-    var metaData = JSON.stringify(params);
-    var documentProperties = PropertiesService.getDocumentProperties();
-    documentProperties.setProperty(posImage.getId(), metaData);
-
-    Logger.log('SITU addPRIcon add metaData ID:' + posImage.getId() + ' value: ' + metaData);
     return posImage.getId();
   }
 
@@ -73,7 +62,7 @@ function addPRIcon(imageId, workedOn, todo) {
 function removePositionsImagesFromParagraph(paragraph) {
   if (paragraph == null) return;
 
-var documentProperties = PropertiesService.getDocumentProperties();
+  var documentProperties = PropertiesService.getDocumentProperties();
 
   // Remove previous image
     var positionedImages = paragraph.getPositionedImages();
@@ -122,8 +111,33 @@ function getParagraphFromElement(element) {
   return paragraph;
 }
 
-function savePR(done, todo) {
+function savePR(imageId, workedOn, todo, taskList, historyList) {
+  var elementInParagraph = getSelectedElement();
+  
+  var paragraph = getParagraphFromElement(elementInParagraph);
+  if (paragraph != null) {
+    var positionedImages = paragraph.getPositionedImages();
+    var posImageId = null;
+    if (positionedImages.length > 0) {
+      posImageId = positionedImages[0].getId();
+    }
 
+    if (posImageId != null) {
+      var params = {};
+      params[IMAGE_ID] = imageId;
+      params[WORKED_ON] = workedOn;
+      params[TODO] = todo;
+      params[TASKLIST] = taskList;
+      params[HISTORYLIST] = historyList;
+
+      var metaData = JSON.stringify(params);
+      var documentProperties = PropertiesService.getDocumentProperties();
+      documentProperties.setProperty(posImageId, metaData);
+
+      Logger.log('SITU savePR add metaData ID:' + posImageId + ' value: ' + metaData);
+      return posImageId;
+    }
+  }
 }
 
 function loadPR() {

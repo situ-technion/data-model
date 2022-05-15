@@ -4,26 +4,59 @@
     <base target="_top">
     <!-- link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css "-->
     <script type="text/javascript">
+      
       function onLoadPRSuccess(params) {
         console.log("HTML running onLoadPRSuccess " + params);
+
+        clearPRSelection();
+        if (params != null) {
+          markPRSelection(params['IMAGE_ID']);
+        }
         var workedOn = document.getElementById('whatIWorkedOn');
         var todo = document.getElementById('whatElseNeedsWork');
 
-        workedOn.value = params['WORKED_ON'];
-        console.log("HTML running onLoadPRSuccess workedOn.value:" + params['WORKED_ON']);
-        todo.value = params['TODO'];
-        console.log("HTML running onLoadPRSuccess workedOn.value:" + params['TODO']);
+        if (params != null) {
+          workedOn.value =  params['WORKED_ON'];
+          console.log("HTML running onLoadPRSuccess workedOn.value:" + params['WORKED_ON']);
+        } else workedOn.value = "";
 
-        markPRSelection(params['IMAGE_ID']);
+        clearTable('taskList');
+        if (params != null) {
+          todo.value = params['TODO'];
+          console.log("HTML running onLoadPRSuccess workedOn.value:" + params['TODO']);
+          var taskList = params['TASK_LIST'];
+          if (taskList != null) {
+            for(var i=0 ; i < taskList.length ; i++) {
+              console.log("HTML onLoadPRSuccess task item:", taskList[i]);
+              addTaskItem(taskList[i]);
+            }
+          }
+        } else todo.value = "";
+
+        // load history
+        clearTable('historyList');
+        if (params != null) {
+          var historyList = params['HISTORY_LIST'];
+          if (historyList != null) {
+            for(var i=0 ; i < historyList.length ; i++) {
+              console.log("HTML onLoadPRSuccess history item:", historyList[i]);
+              addHistoryItem(historyList[i]);
+            }
+          }
+        }
       }
 
       function markPRSelection(imageId) {
+        var prIcon = document.getElementById(imageId);
+        prIcon.style.backgroundColor = "#999999";
+      }
+
+      function clearPRSelection() {
         var tableCells = document.getElementById("prTable").getElementsByTagName("td");
         for (cell of tableCells) {
           cell.style.backgroundColor = "";   
         }
-        var prIcon = document.getElementById(imageId);
-        prIcon.style.backgroundColor = "#999999";
+   
       }
 
       function onSavePRSuccess(imageId) {
@@ -37,22 +70,12 @@
 
       function addPRIcon(imageIdx) {
         console.log("HTML running addPRIcon, index ", imageIdx);
-
-        var workedOn = document.getElementById('whatIWorkedOn').value;
-        console.log("workedOn value:" + workedOn);
-
-        var todo = document.getElementById('whatElseNeedsWork').value;
-        console.log("todo value:" + todo);
-
         markPRSelection(imageIdx);
 
-        var params = [imageIdx, workedOn, todo];
-
-        console.log("metaData value:" + params);
+        var params = [imageIdx];
 
         google.script.run
           .withFailureHandler(onFailure)
-          .withSuccessHandler(onSavePRSuccess)
           .callLibraryFunction("SITULib.addPRIcon", params);
       }
 
@@ -72,19 +95,143 @@
         addPRIcon(2);
       }
 
-      function savePR() {
-        console.log("HTML running savePR");
-        google.script.run
-        .withFailureHandler(onFailure)
-        .callLibraryFunction("SITULib.savePR");
+      function addTask() {
+        console.log("HTML running addTask");
+
+
+        var todo = document.getElementById('whatElseNeedsWork');
+        addTaskItem (todo.value);
+        todo.value = '';
+      }
+
+      function addTaskItem(text) {
+        var taskListTable = document.getElementById('taskList');
+        var row = taskListTable.insertRow(-1);
+
+        var cell0 = row.insertCell(0);
+        var tArea = document.createElement('textarea');
+        tArea.setAttribute('style', 'text-align: right; width:100%;resize: none;');
+        tArea.setAttribute('rows', '3');
+        tArea.value =  text;
+        cell0.appendChild(tArea);
+
+        var cell1 = row.insertCell(1);
+        var tBox = document.createElement('button');
+        tBox.innerHTML = 'מחק';
+        //tBox.setAttribute('src', 'https://www.iconsdb.com/icons/download/black/trash-2-16.png');
+        tBox.setAttribute('onclick', 'deleteTask(this)');
+        cell1.appendChild(tBox);
+
+        var tdoneButton = document.createElement('button');
+        tdoneButton.innerHTML = 'בוצע';
+        //tdoneButton.setAttribute('src', 'https://situ-technion.herokuapp.com/statics/green-check.png');
+        tdoneButton.setAttribute('onclick', 'moveTaskToHistory(this)');
+        cell1.appendChild(tdoneButton);
+
+      }
+
+      function deleteTask(button) {
+        var i = button.parentNode.parentNode.rowIndex;
+        console.log("HTML delete row index " ,i);
+
+        var taskListTable = document.getElementById('taskList');
+        taskListTable.deleteRow(i);
+      }
+
+      function moveTaskToHistory(button) {
+        
+        var row = button.parentNode.parentNode;
+        console.log("HTML moving row index " ,row.rowIndex, "to history");
+
+        var textArea = row.firstChild.firstChild; 
+
+        addHistoryItem(textArea.value);
+        deleteTask(button);
+      }
+
+      function addHistoryItem(text) {
+        var historyTable = document.getElementById('historyList');
+        var historyRow = historyTable.insertRow(-1);
+
+        var cell0 = historyRow.insertCell(0);
+        var tArea = document.createElement('textarea');
+        tArea.setAttribute('style', 'text-align: right; width:100%;resize: none;');
+        tArea.setAttribute('rows', '3');
+        tArea.value =  text;
+        tArea.disabled = true;
+        cell0.appendChild(tArea);
+
+      }
+
+      function clearTable(tableName) {
+        var historyTable = document.getElementById(tableName);  
+        if (historyTable != null) {
+          while (historyTable.rows.length > 0) {
+              historyTable.deleteRow(0);
+          }
+        }
+      }
+
+      function findTaskListRow(button) {
+        var i = button.parentNode.parentNode.rowIndex;
+        return i;
       }
 
       function loadPR() {
+
         console.log("HTML running loadPR");
         google.script.run
         .withFailureHandler(onFailure)
         .withSuccessHandler(onLoadPRSuccess)
         .callLibraryFunction("SITULib.loadPR");
+      }
+
+      function savePR() {
+        console.log("HTML running savePR");
+
+        var imageId = -1;
+        var tableCells = document.getElementById("prTable").getElementsByTagName("td");
+        for (var i = 0; i < tableCells.length ; i++) {
+          console.log("savePR check background value:" + tableCells[i].style.backgroundColor);
+          if (tableCells[i].style.backgroundColor != "") {
+            imageId = i;
+          }   
+        }
+        console.log("savePR imageId value:" + imageId);
+        
+        var workedOn = document.getElementById('whatIWorkedOn').value;
+        console.log("savePR workedOn value:" + workedOn);
+
+        var todo = document.getElementById('whatElseNeedsWork').value;
+        console.log("savePR todo value:" + todo);
+
+        var tasks = [];
+        var tasklist = document.getElementById('taskList');
+        for (var i = 0, row; row = tasklist.rows[i]; i++) {
+          var innerText = row.cells[0].firstChild.value;
+          tasks.push(innerText);
+        console.log("savePR task item value:" + innerText);
+        }
+
+        var history = [];
+        var historylist = document.getElementById('historyList');
+        for (var i = 0, row; row = historylist.rows[i]; i++) {
+          var innerText = row.cells[0].firstChild.value;
+          history.push(innerText);
+          console.log("savePR history item value:" + innerText);
+        }
+
+        var params = [imageId, workedOn, todo, tasks, history];
+
+        console.log("metaData value:" + params);
+
+        // params (workedOn, todo, taskList, historyList)
+
+
+        google.script.run
+        .withFailureHandler(onFailure)
+        .withSuccessHandler(onSavePRSuccess)
+        .callLibraryFunction("SITULib.savePR", params);
       }
       </script>
   </head>
@@ -93,18 +240,21 @@
       <img style="display: block; margin-left: auto; margin-right: auto;" src="https://situ-technion.herokuapp.com/statics/image.png" alt="" width="57" height="84" />
       מוכנות הפסקה
     </p>
-
     <p> 
+      <button type="button" onclick="loadPR()">רענן</button>
+    </p>
+
+    <p>
       <table id="prTable" style="border-collapse: collapse; width: 100%;" border="1">
         <tbody>
-        <tr>
-          <td id="0" style="text-align: center;">
+        <tr style="text-align: center;">
+          <td id="0" >
             <input height="64" src="https://situ-technion.herokuapp.com/statics/red64x64.png" type="image" width="64" onclick="addPRIconLow()"/>
           </td>
-          <td id="1" style="text-align: center;">
+          <td id="1" >
             <input height="64" src="https://situ-technion.herokuapp.com/statics/yellow64x64.png" type="image" width="64" onclick="addPRIconMed()"/>
           </td>
-          <td id="2" style="text-align: center;">
+          <td id="2" >
             <input height="64" src="https://situ-technion.herokuapp.com/statics/green64x64.png" type="image" width="64" onclick="addPRIconHigh()"/>
           </td>
         </tr>
@@ -117,41 +267,59 @@
       </table>
     </p>
 
-    <table style="border-collapse: collapse; width: 100%;" border="0">
+    <table style="border-collapse: collapse; width: 100%;text-align: right;" border="0">
         <tbody>
           <tr>
-            <td  style="text-align: right;">
+            <td>
               <label for="whatIWorkedOn">על מה עבדתי</label>
             </td>
           </tr>
 
           <tr>
             <td>
-              <textarea id="whatIWorkedOn" style="text-align: right; width:100%;" rows="10" > </textarea>
+              <textarea id="whatIWorkedOn" style="text-align: right; width:100%;resize: none;" rows="3" > </textarea>
             </td>
           </tr>
         </tbody>
     </table>
 
 
-    <table style="border-collapse: collapse; width: 100%;" border="0">
+    <table style="border-collapse: collapse; width: 100%;text-align: right;" border="0">
         <tbody>
           <tr>
-            <td  style="text-align: right;">
+            <td>
               <label for="whatElseNeedsWork">היכן נדרשת עוד עבודה</label>
             </td>
           </tr>
 
           <tr>
             <td>
-              <textarea id="whatElseNeedsWork" style="text-align: right; width:100%;" rows="10"></textarea>
+              <textarea id="whatElseNeedsWork" style="text-align: right; width:100%;resize: none;" rows="3"></textarea>
            </td>
+          </tr>
+          <tr>
+            <td>
+              <button type="button" onclick="addTask()">הוספה לרשימה</button>
+            </td>
           </tr>
         </tbody>
     </table>
 
-    <p><button type="button" onclick="savePR()">שמור</button></p>
-    <p><button type="button" onclick="loadPR()">רענן</button></p>
+    <p> 
+      <button type="button" onclick="savePR()">שמור</button>
+    </p>
+
+  <p style="text-align: right;">
+    <label for="taskList">רשימת מטלות</label>
+    <table id="taskList" style="border-collapse: collapse; width: 100%;" border="1">
+    </table>
+  </p>
+
+  <p style="text-align: right;">
+    <label for="historyList">היסטוריה</label>
+    <table id="historyList" style="border-collapse: collapse; width: 100%;" border="0">
+    </table>
+  </p>
   </body>
 </html>
   
