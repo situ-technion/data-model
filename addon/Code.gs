@@ -46,7 +46,7 @@ function addPRIcon(imageId) {
     // Add the PositionedImage with offsets (in points).
     var posImage = paragraph.addPositionedImage(blob)
       .setTopOffset(0)
-      .setLeftOffset(450) // 0 or page width for RTL
+      .setLeftOffset(460) // 0 or page width for RTL
       .setWidth(32)
       .setHeight(32)
       .setLayout(DocumentApp.PositionedLayout.WRAP_TEXT);
