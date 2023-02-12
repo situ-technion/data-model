@@ -1,165 +1,333 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <!-- link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css "-->
+    <script type="text/javascript">
+      
+      function onLoadPRSuccess(params) {
+        console.log("HTML running onLoadPRSuccess " + params);
 
+        clearPRSelection();
+        if (params != null) {
+          markPRSelection(params['IMAGE_ID']);
+        }
+        var workedOn = document.getElementById('whatIWorkedOn');
+        var todo = document.getElementById('whatElseNeedsWork');
 
-var readinessIcons = ['https://situ-technion.herokuapp.com/statics/red64x64.png',
-'https://situ-technion.herokuapp.com/statics/yellow64x64.png',
-'https://situ-technion.herokuapp.com/statics/green64x64.png'];
+        if (params != null) {
+          workedOn.value =  params['WORKED_ON'];
+          console.log("HTML running onLoadPRSuccess workedOn.value:" + params['WORKED_ON']);
+        } else workedOn.value = "";
 
-var IMAGE_ID = 'IMAGE_ID', WORKED_ON = 'WORKED_ON', TODO = 'TODO', TASKLIST = 'TASK_LIST', HISTORYLIST = 'HISTORY_LIST';
+        clearTable('taskList');
+        if (params != null) {
+          todo.value = params['TODO'];
+          console.log("HTML running onLoadPRSuccess workedOn.value:" + params['TODO']);
+          var taskList = params['TASK_LIST'];
+          if (taskList != null) {
+            for(var i=0 ; i < taskList.length ; i++) {
+              console.log("HTML onLoadPRSuccess task item:", taskList[i]);
+              addTaskItem(taskList[i]);
+            }
+          }
+        } else todo.value = "";
 
-function openDoc(){
-  tempActiveUser = Session.getTemporaryActiveUserKey();
-  strippedUser = tempActiveUser.replaceAll(/\s+/g, '-').replaceAll('+', '-');
-  displayWindowPage("paragraphReadiness");
- // loadIcons();
-}
-
-function onInstall(e) {
-  createDocOpenTrigger();
-}
-
-function createDocOpenTrigger(){
-  var triggers = ScriptApp.getProjectTriggers().filter(
-        function(s) {return s.getHandlerFunction() === 'openDoc';}
-    );
-
-  if (triggers.length == 0) {
-    ScriptApp.newTrigger('openDoc')
-        .forDocument(DocumentApp.getActiveDocument())
-        .onOpen()
-        .create();
-  }
-}
-
-function addPRIcon(imageId) {
-
-  Logger.log('SITU addPRIcon image id ' + imageId);
-  var blob = UrlFetchApp.fetch(readinessIcons[imageId]).getBlob()
-   
-  var elementInParagraph = getSelectedElement();
-  
-  var paragraph = getParagraphFromElement(elementInParagraph);
-
-  removePositionsImagesFromParagraph(paragraph);
-
-  if (paragraph) {
-    
-    // Add the PositionedImage with offsets (in points).
-    var posImage = paragraph.addPositionedImage(blob)
-      .setTopOffset(0)
-      .setLeftOffset(460) // 0 or page width for RTL
-      .setWidth(32)
-      .setHeight(32)
-      .setLayout(DocumentApp.PositionedLayout.WRAP_TEXT);
-
-
-    console.log('SITU addPRIcon adding readiness image ' +  posImage);
-
-    return posImage.getId();
-  }
-
-}
-
-function removePositionsImagesFromParagraph(paragraph) {
-  if (paragraph == null) return;
-
-  var documentProperties = PropertiesService.getDocumentProperties();
-
-  // Remove previous image
-    var positionedImages = paragraph.getPositionedImages();
-    for(var i=0; i<positionedImages.length; i++) {
-      paragraph.removePositionedImage( positionedImages[i].getId());
-      documentProperties.deleteProperty(positionedImages[i].getId());
-    }
-
-}
-
-function getSelectedElement() {
-
-  var elementInParagraph = null;
-  var doc = DocumentApp.getActiveDocument();
-  if (doc != null) {
-  
-    var cursor = doc.getCursor();
-    console.log('SITU getSelectedElement cursor ' +  cursor);
-    if (cursor) {
-      elementInParagraph = cursor.getElement();
-      console.log('SITU getSelectedElement element from cursor ' +  elementInParagraph);
-    }
-
-    var selection = doc.getSelection();
-    console.log('SITU getSelectedElement selection ' +  selection);
-    if (selection) {
-      var elements = selection.getSelectedElements();
-      if (elements.length > 0) {
-        elementInParagraph = elements[0].getElement();
+        // load history
+        clearTable('historyList');
+        if (params != null) {
+          var historyList = params['HISTORY_LIST'];
+          if (historyList != null) {
+            for(var i=0 ; i < historyList.length ; i++) {
+              console.log("HTML onLoadPRSuccess history item:", historyList[i]);
+              addHistoryItem(historyList[i]);
+            }
+          }
+        }
       }
-    }
-  }
-  console.log('SITU getSelectedElement element selected ' +  elementInParagraph);
 
-  return elementInParagraph;
-}
+      function markPRSelection(imageId) {
+        var prIcon = document.getElementById(imageId);
+        prIcon.style.backgroundColor = "#999999";
+      }
 
-function getParagraphFromElement(element) {
+      function clearPRSelection() {
+        var tableCells = document.getElementById("prTable").getElementsByTagName("td");
+        for (cell of tableCells) {
+          cell.style.backgroundColor = "";   
+        }
+   
+      }
 
-  var paragraph = element;
-  while (paragraph != null && paragraph.getType() != DocumentApp.ElementType.PARAGRAPH) {
-    paragraph = paragraph.getParent();
-  } 
+      function onSavePRSuccess(imageId) {
+        console.log("HTML running onSavePRSuccess, got id:" + imageId);
+         savePR();
+      }
 
-  console.log('SITU getParagraphFromElement ' +  paragraph);
-  return paragraph;
-}
+      function onFailure(error) {
+        var div = document.getElementById('output');
+        console.log("HTML error " + error);
+      }
 
-function savePR(imageId, workedOn, todo, taskList, historyList) {
-  var elementInParagraph = getSelectedElement();
+      function addPRIcon(imageIdx) {
+        console.log("HTML running addPRIcon, index ", imageIdx);
+        clearPRSelection();
+        markPRSelection(imageIdx);
+
+        var params = [imageIdx];
+
+        google.script.run
+          .withFailureHandler(onFailure)
+          .withSuccessHandler(onSavePRSuccess)
+          .callLibraryFunction("SITULib.addPRIcon", params);
+
+       
+      }
+
+      function addPRIconLow() {   
+        console.log("HTML running addPRIconLow");
+
+        addPRIcon(0);
+      }
+
+      function addPRIconMed() {   
+        console.log("HTML running addPRIconMed");
+        addPRIcon(1);
+      }
+
+      function addPRIconHigh() {   
+        console.log("HTML running addPRIconHigh");
+        addPRIcon(2);
+      }
+
+      function addTask() {
+        console.log("HTML running addTask");
+
+
+        var todo = document.getElementById('whatElseNeedsWork');
+        addTaskItem (todo.value);
+        todo.value = '';
+        savePR();
+
+      }
+
+      function addTaskItem(text) {
+        var taskListTable = document.getElementById('taskList');
+        var row = taskListTable.insertRow(-1);
+
+        var cell0 = row.insertCell(0);
+        var tArea = document.createElement('textarea');
+        tArea.setAttribute('style', 'width:100%;resize: none;');
+        tArea.setAttribute('rows', '3');
+        tArea.value =  text;
+        cell0.appendChild(tArea);
+
+        var cell1 = row.insertCell(1);
+        var tBox = document.createElement('button');
+        tBox.innerHTML = 'Delete';
+        //tBox.setAttribute('src', 'https://www.iconsdb.com/icons/download/black/trash-2-16.png');
+        tBox.setAttribute('onclick', 'deleteTask(this)');
+        cell1.appendChild(tBox);
+
+        var tdoneButton = document.createElement('button');
+        tdoneButton.innerHTML = 'Done';
+        //tdoneButton.setAttribute('src', 'https://technion.link/maya/statics/green-check.png');
+        tdoneButton.setAttribute('onclick', 'moveTaskToHistory(this)');
+        cell1.appendChild(tdoneButton);
+
+      }
+
+      function deleteTask(button) {
+        var i = button.parentNode.parentNode.rowIndex;
+        console.log("HTML delete row index " ,i);
+
+        var taskListTable = document.getElementById('taskList');
+        taskListTable.deleteRow(i);
+
+        savePR();
+      }
+
+      function moveTaskToHistory(button) {
+        
+        var row = button.parentNode.parentNode;
+        console.log("HTML moving row index " ,row.rowIndex, "to history");
+
+        var textArea = row.firstChild.firstChild; 
+
+        addHistoryItem(textArea.value);
+        deleteTask(button);
+      }
+
+      function addHistoryItem(text) {
+        var historyTable = document.getElementById('historyList');
+        var historyRow = historyTable.insertRow(-1);
+
+        var cell0 = historyRow.insertCell(0);
+        var tArea = document.createElement('textarea');
+        tArea.setAttribute('style', 'width:100%;resize: none;');
+        tArea.setAttribute('rows', '3');
+        tArea.value =  text;
+        tArea.disabled = true;
+        cell0.appendChild(tArea);
+
+      }
+
+      function clearTable(tableName) {
+        var historyTable = document.getElementById(tableName);  
+        if (historyTable != null) {
+          while (historyTable.rows.length > 0) {
+              historyTable.deleteRow(0);
+          }
+        }
+      }
+
+      function findTaskListRow(button) {
+        var i = button.parentNode.parentNode.rowIndex;
+        return i;
+      }
+
+      function loadPR() {
+
+        console.log("HTML running loadPR");
+        google.script.run
+        .withFailureHandler(onFailure)
+        .withSuccessHandler(onLoadPRSuccess)
+        .callLibraryFunction("SITULib.loadPR");
+      }
+
+      function savePR() {
+        console.log("HTML running savePR");
+
+        var imageId = -1;
+        var tableCells = document.getElementById("prTable").getElementsByTagName("td");
+        for (var i = 0; i < tableCells.length ; i++) {
+          console.log("savePR check background value:" + tableCells[i].style.backgroundColor);
+          if (tableCells[i].style.backgroundColor != "") {
+            imageId = i;
+          }   
+        }
+        console.log("savePR imageId value:" + imageId);
+        
+        var workedOn = document.getElementById('whatIWorkedOn').value;
+        console.log("savePR workedOn value:" + workedOn);
+
+        var todo = document.getElementById('whatElseNeedsWork').value;
+        console.log("savePR todo value:" + todo);
+
+        var tasks = [];
+        var tasklist = document.getElementById('taskList');
+        for (var i = 0, row; row = tasklist.rows[i]; i++) {
+          var innerText = row.cells[0].firstChild.value;
+          tasks.push(innerText);
+        console.log("savePR task item value:" + innerText);
+        }
+
+        var history = [];
+        var historylist = document.getElementById('historyList');
+        for (var i = 0, row; row = historylist.rows[i]; i++) {
+          var innerText = row.cells[0].firstChild.value;
+          history.push(innerText);
+          console.log("savePR history item value:" + innerText);
+        }
+
+        var params = [imageId, workedOn, todo, tasks, history];
+
+        console.log("metaData value:" + params);
+
+        // params (workedOn, todo, taskList, historyList)
+
+
+        google.script.run
+        .withFailureHandler(onFailure)
+        .callLibraryFunction("SITULib.savePR", params);
+      }
+      </script>
+  </head>
+  <body>
+
+      <img style="display: block; margin-left: auto; margin-right: auto;" src="https://technion.link/maya/statics/image.png" alt="" width="57" height="84" />
+      
+    <p> 
+      <button type="button" onclick="loadPR()">Refresh</button>
+    </p>
+
+    <p >
+      <b >I think the paragraph</b>
+      <table id="prTable" style="border-collapse: collapse; width: 100%;" border="1">
+        <tbody>
+        <tr style="text-align: center;">
+          <td id="0" >
+            <input height="64" src="https://technion.link/maya/statics/red64x64.png" type="image" width="64" onclick="addPRIconLow()"/>
+          </td>
+          <td id="1" >
+            <input height="64" src="https://technion.link/maya/statics/yellow64x64.png" type="image" width="64" onclick="addPRIconMed()"/>
+          </td>
+          <td id="2" >
+            <input height="64" src="https://technion.link/maya/statics/green64x64.png" type="image" width="64" onclick="addPRIconHigh()"/>
+          </td>
+        </tr>
+        <tr>
+          <td >Requires extensive editing</td>
+          <td >Requires some editing</td>
+          <td >is Ready</td>
+        </tr>
+        </tbody>
+      </table>
+    </p>
+
+    <table hidden style="border-collapse: collapse; width: 100%;text-align: right;" border="0">
+        <tbody>
+          <tr>
+            <td>
+              <label for="whatIWorkedOn">על מה עבדתי</label>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <textarea id="whatIWorkedOn" style="text-align: right; width:100%;resize: none;" rows="3" > </textarea>
+            </td>
+          </tr>
+        </tbody>
+    </table>
+
+
+    <table style="border-collapse: collapse; width: 100%;" border="0">
+        <tbody>
+          <tr>
+            <td>
+              <label for="whatElseNeedsWork"><b>What kind of editing is required?</b></label>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <textarea id="whatElseNeedsWork" style="width:100%;resize: none;" rows="3"></textarea>
+           </td>
+          </tr>
+          <tr>
+            <td>
+              <button type="button" onclick="addTask()">Add to list</button>
+            </td>
+          </tr>
+        </tbody>
+    </table>
+
+    <p hidden> 
+      <button type="button" onclick="savePR()">שמור</button>
+    </p>
+
+  <p >
+    <label for="taskList"><b>To-do list</b></label>
+    <table id="taskList" style="border-collapse: collapse; width: 100%;" border="1">
+    </table>
+  </p>
+
+  <p >
+    <label for="historyList"><b>History</b></label>
+    <table id="historyList" style="border-collapse: collapse; width: 100%;" border="0">
+    </table>
+  </p>
+  </body>
+</html>
   
-  var paragraph = getParagraphFromElement(elementInParagraph);
-  if (paragraph != null) {
-    var positionedImages = paragraph.getPositionedImages();
-    var posImageId = null;
-    if (positionedImages.length > 0) {
-      posImageId = positionedImages[0].getId();
-    }
-
-    if (posImageId != null) {
-      var params = {};
-      params[IMAGE_ID] = imageId;
-      params[WORKED_ON] = workedOn;
-      params[TODO] = todo;
-      params[TASKLIST] = taskList;
-      params[HISTORYLIST] = historyList;
-
-      var metaData = JSON.stringify(params);
-      var documentProperties = PropertiesService.getDocumentProperties();
-      documentProperties.setProperty(posImageId, metaData);
-
-      Logger.log('SITU savePR add metaData ID:' + posImageId + ' value: ' + metaData);
-      return posImageId;
-    }
-  }
-}
-
-function loadPR() {
-
-  var elementInParagraph = getSelectedElement();
-  
-  var paragraph = getParagraphFromElement(elementInParagraph);
-
-  if (paragraph) {
-    var positionedImages = paragraph.getPositionedImages();
-    if (positionedImages.length > 0) {
-      var documentProperties = PropertiesService.getDocumentProperties();
-
-      var metaData = documentProperties.getProperty(positionedImages[0].getId());
-      metaDataObj = JSON.parse(metaData);
-      return metaDataObj;
-    }
-  }
-}
-
-function displayWindowPage(page) {
-  var template = HtmlService.createTemplateFromFile(page);
-  DocumentApp.getUi().showSidebar(template.evaluate().setTitle("SITU - collaborative writing"));
-}
-

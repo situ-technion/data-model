@@ -1,62 +1,63 @@
+var readinessIcons = [
+  "https://technion.link/maya/statics/red64x64.png",
+  "https://technion.link/maya/statics/yellow64x64.png",
+  "https://technion.link/maya/statics/green64x64.png",
+];
 
+var IMAGE_ID = "IMAGE_ID",
+  WORKED_ON = "WORKED_ON",
+  TODO = "TODO",
+  TASKLIST = "TASK_LIST",
+  HISTORYLIST = "HISTORY_LIST";
 
-var readinessIcons = ['https://situ-technion.herokuapp.com/statics/red64x64.png',
-'https://situ-technion.herokuapp.com/statics/yellow64x64.png',
-'https://situ-technion.herokuapp.com/statics/green64x64.png'];
-
-var IMAGE_ID = 'IMAGE_ID', WORKED_ON = 'WORKED_ON', TODO = 'TODO', TASKLIST = 'TASK_LIST', HISTORYLIST = 'HISTORY_LIST';
-
-function openDoc(){
+function openDoc() {
   tempActiveUser = Session.getTemporaryActiveUserKey();
-  strippedUser = tempActiveUser.replaceAll(/\s+/g, '-').replaceAll('+', '-');
+  strippedUser = tempActiveUser.replaceAll(/\s+/g, "-").replaceAll("+", "-");
   displayWindowPage("paragraphReadiness");
- // loadIcons();
+  // loadIcons();
 }
 
 function onInstall(e) {
   createDocOpenTrigger();
 }
 
-function createDocOpenTrigger(){
-  var triggers = ScriptApp.getProjectTriggers().filter(
-        function(s) {return s.getHandlerFunction() === 'openDoc';}
-    );
+function createDocOpenTrigger() {
+  var triggers = ScriptApp.getProjectTriggers().filter(function (s) {
+    return s.getHandlerFunction() === "openDoc";
+  });
 
   if (triggers.length == 0) {
-    ScriptApp.newTrigger('openDoc')
-        .forDocument(DocumentApp.getActiveDocument())
-        .onOpen()
-        .create();
+    ScriptApp.newTrigger("openDoc")
+      .forDocument(DocumentApp.getActiveDocument())
+      .onOpen()
+      .create();
   }
 }
 
 function addPRIcon(imageId) {
+  Logger.log("SITU addPRIcon image id " + imageId);
+  var blob = UrlFetchApp.fetch(readinessIcons[imageId]).getBlob();
 
-  Logger.log('SITU addPRIcon image id ' + imageId);
-  var blob = UrlFetchApp.fetch(readinessIcons[imageId]).getBlob()
-   
   var elementInParagraph = getSelectedElement();
-  
+
   var paragraph = getParagraphFromElement(elementInParagraph);
 
   removePositionsImagesFromParagraph(paragraph);
 
   if (paragraph) {
-    
     // Add the PositionedImage with offsets (in points).
-    var posImage = paragraph.addPositionedImage(blob)
+    var posImage = paragraph
+      .addPositionedImage(blob)
       .setTopOffset(0)
       .setLeftOffset(460) // 0 or page width for RTL
       .setWidth(32)
       .setHeight(32)
       .setLayout(DocumentApp.PositionedLayout.WRAP_TEXT);
 
-
-    console.log('SITU addPRIcon adding readiness image ' +  posImage);
+    console.log("SITU addPRIcon adding readiness image " + posImage);
 
     return posImage.getId();
   }
-
 }
 
 function removePositionsImagesFromParagraph(paragraph) {
@@ -65,29 +66,28 @@ function removePositionsImagesFromParagraph(paragraph) {
   var documentProperties = PropertiesService.getDocumentProperties();
 
   // Remove previous image
-    var positionedImages = paragraph.getPositionedImages();
-    for(var i=0; i<positionedImages.length; i++) {
-      paragraph.removePositionedImage( positionedImages[i].getId());
-      documentProperties.deleteProperty(positionedImages[i].getId());
-    }
-
+  var positionedImages = paragraph.getPositionedImages();
+  for (var i = 0; i < positionedImages.length; i++) {
+    paragraph.removePositionedImage(positionedImages[i].getId());
+    documentProperties.deleteProperty(positionedImages[i].getId());
+  }
 }
 
 function getSelectedElement() {
-
   var elementInParagraph = null;
   var doc = DocumentApp.getActiveDocument();
   if (doc != null) {
-  
     var cursor = doc.getCursor();
-    console.log('SITU getSelectedElement cursor ' +  cursor);
+    console.log("SITU getSelectedElement cursor " + cursor);
     if (cursor) {
       elementInParagraph = cursor.getElement();
-      console.log('SITU getSelectedElement element from cursor ' +  elementInParagraph);
+      console.log(
+        "SITU getSelectedElement element from cursor " + elementInParagraph
+      );
     }
 
     var selection = doc.getSelection();
-    console.log('SITU getSelectedElement selection ' +  selection);
+    console.log("SITU getSelectedElement selection " + selection);
     if (selection) {
       var elements = selection.getSelectedElements();
       if (elements.length > 0) {
@@ -95,25 +95,27 @@ function getSelectedElement() {
       }
     }
   }
-  console.log('SITU getSelectedElement element selected ' +  elementInParagraph);
+  console.log("SITU getSelectedElement element selected " + elementInParagraph);
 
   return elementInParagraph;
 }
 
 function getParagraphFromElement(element) {
-
   var paragraph = element;
-  while (paragraph != null && paragraph.getType() != DocumentApp.ElementType.PARAGRAPH) {
+  while (
+    paragraph != null &&
+    paragraph.getType() != DocumentApp.ElementType.PARAGRAPH
+  ) {
     paragraph = paragraph.getParent();
-  } 
+  }
 
-  console.log('SITU getParagraphFromElement ' +  paragraph);
+  console.log("SITU getParagraphFromElement " + paragraph);
   return paragraph;
 }
 
 function savePR(imageId, workedOn, todo, taskList, historyList) {
   var elementInParagraph = getSelectedElement();
-  
+
   var paragraph = getParagraphFromElement(elementInParagraph);
   if (paragraph != null) {
     var positionedImages = paragraph.getPositionedImages();
@@ -134,16 +136,17 @@ function savePR(imageId, workedOn, todo, taskList, historyList) {
       var documentProperties = PropertiesService.getDocumentProperties();
       documentProperties.setProperty(posImageId, metaData);
 
-      Logger.log('SITU savePR add metaData ID:' + posImageId + ' value: ' + metaData);
+      Logger.log(
+        "SITU savePR add metaData ID:" + posImageId + " value: " + metaData
+      );
       return posImageId;
     }
   }
 }
 
 function loadPR() {
-
   var elementInParagraph = getSelectedElement();
-  
+
   var paragraph = getParagraphFromElement(elementInParagraph);
 
   if (paragraph) {
@@ -151,7 +154,9 @@ function loadPR() {
     if (positionedImages.length > 0) {
       var documentProperties = PropertiesService.getDocumentProperties();
 
-      var metaData = documentProperties.getProperty(positionedImages[0].getId());
+      var metaData = documentProperties.getProperty(
+        positionedImages[0].getId()
+      );
       metaDataObj = JSON.parse(metaData);
       return metaDataObj;
     }
@@ -160,6 +165,7 @@ function loadPR() {
 
 function displayWindowPage(page) {
   var template = HtmlService.createTemplateFromFile(page);
-  DocumentApp.getUi().showSidebar(template.evaluate().setTitle("SITU - collaborative writing"));
+  DocumentApp.getUi().showSidebar(
+    template.evaluate().setTitle("SITU - collaborative writing")
+  );
 }
-
