@@ -16,6 +16,7 @@ function createDocOpenTrigger(){
           .onOpen()
           .create();
     }
+    
 }
 
 function getProjectTriggersByName(name) {
